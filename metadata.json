@@ -1,0 +1,6 @@
+{
+  "name": "NFRT",
+  "description": "A luxury modern Egyptian digital restaurant menu and brochure website.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
