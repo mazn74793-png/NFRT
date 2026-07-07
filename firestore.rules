@@ -1,12 +1,75 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access to settings and orders
-    match /settings/{document=**} {
-      allow read, write: if true;
+
+    // Helper functions for common validation
+    function isValidString(val, minSize, maxSize) {
+      return val is string && val.size() >= minSize && val.size() <= maxSize;
     }
-    match /orders/{document=**} {
-      allow read, write: if true;
+
+    function isValidUrl(val) {
+      return val is string && (val.size() == 0 || val.matches('^https?://.*'));
+    }
+
+    // Default deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Settings Collection Rules
+    match /settings/{document} {
+      // Allow any guest to read settings (publicly accessible)
+      allow read: if true;
+
+      // Restrict write access to menu_config to prevent tampering/spam
+      allow write: if document == 'menu_config'
+        && request.resource.data.keys().hasAll(['coverUrl', 'logoUrl', 'backgroundUrl', 'categoryBackgrounds', 'itemImages', 'cloudinary'])
+        // Type check basic config urls
+        && isValidUrl(request.resource.data.coverUrl)
+        && isValidUrl(request.resource.data.logoUrl)
+        && isValidUrl(request.resource.data.backgroundUrl)
+        // Verify optional string fields if present
+        && (!('storyEn' in request.resource.data) || request.resource.data.storyEn is string && request.resource.data.storyEn.size() <= 2000)
+        && (!('storyAr' in request.resource.data) || request.resource.data.storyAr is string && request.resource.data.storyAr.size() <= 2000)
+        && (!('brandName' in request.resource.data) || request.resource.data.brandName is string && request.resource.data.brandName.size() <= 100)
+        // Verify Map collections
+        && request.resource.data.categoryBackgrounds is map
+        && request.resource.data.itemImages is map
+        && request.resource.data.cloudinary is map;
+    }
+
+    // Orders Collection Rules
+    match /orders/{orderId} {
+      // Allow customers to fetch their orders, or the admin to list orders
+      allow read: if true;
+
+      // Allow creating a new order if it matches the strict structural schema
+      allow create: if
+        isValidString(request.resource.data.customerName, 1, 100)
+        && isValidString(request.resource.data.tableNumber, 1, 20)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.totalPrice is number
+        && request.resource.data.totalPrice >= 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 50;
+
+      // Allow updating orders (e.g. by the admin to mark as completed or cancelled)
+      allow update: if
+        // Immutability checks: Customers cannot alter their existing orders, and only the status can transition.
+        request.resource.data.customerName == resource.data.customerName
+        && request.resource.data.tableNumber == resource.data.tableNumber
+        && request.resource.data.totalPrice == resource.data.totalPrice
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.items == resource.data.items
+        // Strict state transitions: status can only transition to 'pending', 'completed', or 'cancelled'
+        && request.resource.data.status in ['pending', 'completed', 'cancelled']
+        // Final state: once marked 'completed' or 'cancelled', it cannot be modified further
+        && resource.data.status == 'pending';
+
+      // Strictly forbid deleting any historic orders for safety and auditing
+      allow delete: if false;
     }
   }
 }

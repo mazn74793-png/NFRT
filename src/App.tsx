@@ -17,6 +17,8 @@ export default function App() {
   const [config, setConfig] = useState<BackgroundConfig>({
     coverUrl: "",
     logoUrl: "",
+    backgroundUrl: "",
+    brandName: "",
     categoryBackgrounds: {},
     itemImages: {},
     cloudinary: {
@@ -112,7 +114,7 @@ export default function App() {
       
       {/* Background Layer */}
       <BackgroundOverlay 
-        customBgUrl={config.coverUrl} 
+        customBgUrl={config.backgroundUrl} 
         isCover={true}
       />
 

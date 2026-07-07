@@ -169,6 +169,26 @@ export default function MenuBook({
     return wishlistItems.reduce((sum, item) => sum + item.price * (wishlist[item.id] || 0), 0);
   }, [wishlistItems, wishlist]);
 
+  // Memoized filtered categories and items for instantaneous search response and high performance
+  const filteredCategories = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return categories;
+    return categories
+      .map((cat) => {
+        const matchedItems = cat.items.filter((item) => {
+          return (
+            item.nameEn.toLowerCase().includes(query) ||
+            item.nameAr.includes(query) ||
+            item.descriptionEn.toLowerCase().includes(query) ||
+            item.descriptionAr.includes(query) ||
+            (item.tags && item.tags.some((tag) => tag.toLowerCase().includes(query)))
+          );
+        });
+        return { ...cat, items: matchedItems };
+      })
+      .filter((cat) => cat.items.length > 0);
+  }, [categories, searchQuery]);
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !tableNumber.trim()) {
@@ -280,60 +300,133 @@ export default function MenuBook({
         {/* ======================================================== */}
         {/* STORY HERO HEADER SECTION */}
         {/* ======================================================== */}
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center text-center space-y-4 md:space-y-6 py-4 z-20">
-          <div className="space-y-1 flex flex-col items-center justify-center">
-            {config.logoUrl ? (
-              <img 
-                src={config.logoUrl} 
-                alt="NFRT Logo" 
-                className="h-16 sm:h-20 md:h-24 w-auto object-contain select-none mb-2 hover:scale-105 transition-transform duration-300"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-widest text-amber-950 font-sans uppercase select-none">
-                NFRT
-              </h1>
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 py-6 z-20">
+          
+          {/* Top Royal Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-950/10 border border-amber-900/15 backdrop-blur-sm select-none"
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-700 animate-pulse" />
+            <span className="text-[9px] font-mono tracking-[0.25em] font-extrabold text-amber-900 uppercase">
+              {lang === "en" ? "Royal Culinary House" : "بيت الطهي الملكي الفاخر"}
+            </span>
+          </motion.div>
+
+          {/* Redesigned Brand Layout: Logo ABOVE the Name in the center */}
+          <div className="flex flex-col items-center justify-center space-y-4 select-none">
+            {/* Logo Image above the Name */}
+            {config.logoUrl && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-500/20 bg-amber-950/5 p-1 flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-500"
+              >
+                <img 
+                  src={config.logoUrl} 
+                  alt="NFRT Logo" 
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                  loading="eager"
+                  decoding="sync"
+                />
+              </motion.div>
             )}
+
+            {/* Restaurant Name in the middle */}
+            <div className="space-y-2 text-center">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[0.15em] text-amber-950 font-sans uppercase drop-shadow-sm">
+                {config.brandName || "NFRT"}
+              </h1>
+              
+              <div className="flex items-center justify-center gap-2">
+                <span className="h-[1px] w-6 bg-amber-800/30" />
+                <span className="text-[10px] font-mono tracking-widest text-amber-800 uppercase">
+                  {lang === "en" ? "EST. 2026" : "تأسس عام ٢٠٢٦"}
+                </span>
+                <span className="h-[1px] w-6 bg-amber-800/30" />
+              </div>
+            </div>
           </div>
 
-          {/* Central Nefertiti Pop-Art Frame - Maximized and completely bare of background graphics */}
+          {/* Central Royal Portal Container: Image below the name */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
-            whileHover={{ scale: 1.03 }}
-            className="relative group max-w-lg sm:max-w-xl md:max-w-3xl lg:max-w-4xl w-full flex justify-center items-center select-none transition-all duration-500 filter drop-shadow-[0_4px_30px_rgba(245,158,11,0.08)] hover:drop-shadow-[0_6px_35px_rgba(245,158,11,0.14)]"
+            transition={{ type: "spring", stiffness: 50, damping: 15, delay: 0.15 }}
+            className="relative w-full max-w-xl sm:max-w-2xl px-4 flex justify-center items-center select-none"
           >
-            <img 
-              src={config.coverUrl || defaultHeroUrl} 
-              alt="NFRT Nefertiti wearing sunglasses" 
-              className="w-full h-auto object-contain select-none pointer-events-none max-h-[550px] sm:max-h-[650px] md:max-h-[750px] lg:max-h-[850px]"
-              referrerPolicy="no-referrer"
-            />
+            {/* Ambient Golden Glowing Aura */}
+            <div className="absolute inset-0 bg-radial-gradient from-amber-500/15 via-transparent to-transparent blur-3xl opacity-70 scale-125 pointer-events-none select-none z-0" />
+            
+            {/* The Royal Frame Portal Container */}
+            <div className="relative p-6 sm:p-8 md:p-10 rounded-[2.5rem] border border-amber-900/10 bg-gradient-to-b from-amber-900/[0.02] to-amber-900/[0.05] backdrop-blur-xs w-full flex items-center justify-center overflow-hidden group shadow-[inset_0_4px_40px_rgba(139,92,26,0.03)] hover:shadow-[inset_0_4px_45px_rgba(139,92,26,0.05)] transition-all duration-700">
+              
+              {/* Corner Golden Egyptian L-Brackets */}
+              <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-amber-700/40 rounded-tl-lg" />
+              <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-amber-700/40 rounded-tr-lg" />
+              <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-amber-700/40 rounded-bl-lg" />
+              <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-amber-700/40 rounded-br-lg" />
+              
+              {/* Subtle side hieroglyphs or lines */}
+              <div className="absolute inset-y-8 left-3 w-[1px] bg-gradient-to-b from-transparent via-amber-800/15 to-transparent" />
+              <div className="absolute inset-y-8 right-3 w-[1px] bg-gradient-to-b from-transparent via-amber-800/15 to-transparent" />
+
+              {/* Floating Illustration */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                className="w-full h-auto flex items-center justify-center z-10"
+              >
+                {/* Src priority: uploaded Hero Cover URL -> uploaded Logo URL (shown bigger) -> default Hero Artwork */}
+                <img 
+                  src={config.coverUrl || config.logoUrl || defaultHeroUrl} 
+                  alt="NFRT Hero Illustration" 
+                  className="max-w-full h-auto object-contain select-none pointer-events-none max-h-[450px] sm:max-h-[550px] md:max-h-[650px] drop-shadow-[0_20px_50px_rgba(139,92,26,0.25)] hover:drop-shadow-[0_25px_60px_rgba(139,92,26,0.35)] transition-all duration-700"
+                  referrerPolicy="no-referrer"
+                  loading="eager"
+                  decoding="sync"
+                />
+              </motion.div>
+
+              {/* Tiny decorative star ornaments */}
+              <span className="absolute top-6 left-1/2 -translate-x-1/2 text-amber-700/40 text-[10px] tracking-widest font-mono">✦ ✦ ✦</span>
+              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-amber-700/40 text-xs">✦</span>
+            </div>
           </motion.div>
 
           {/* Poetic Narrative Block */}
-          <div className="max-w-2xl px-4 space-y-3">
-            <p className="text-xs md:text-sm text-amber-900/95 leading-relaxed md:leading-loose font-serif italic text-center select-none whitespace-pre-line">
+          <div className="max-w-2xl px-6 space-y-4">
+            <div className="flex justify-center items-center gap-2 text-amber-700/40 text-sm select-none">
+              <span>✦</span>
+              <span className="h-[1px] w-8 bg-amber-800/10" />
+              <span>✦</span>
+            </div>
+            <p className="text-xs sm:text-sm md:text-[15px] text-amber-950 font-serif italic font-medium leading-relaxed md:leading-loose text-center select-none whitespace-pre-line tracking-wide drop-shadow-xs max-w-xl mx-auto">
               {lang === "en" 
                 ? (config.storyEn || POETIC_STORY.textEn) 
                 : (config.storyAr || POETIC_STORY.textAr)}
             </p>
-            <div className="flex justify-center items-center gap-3 select-none">
-              <p className="text-xs font-mono tracking-widest text-amber-800 uppercase">
-                {lang === "en" ? "NFRT team" : "فريق نفرتيتي"}
+            <div className="flex justify-center items-center gap-3 select-none pt-1">
+              <span className="h-[1px] w-4 bg-amber-800/20" />
+              <p className="text-[10px] font-mono tracking-[0.2em] text-amber-800 uppercase font-bold">
+                {lang === "en" ? "NFRT Team" : "فريق نفرتيتي"}
               </p>
+              <span className="h-[1px] w-4 bg-amber-800/20" />
             </div>
           </div>
 
           {/* Elegant Explore Indicator */}
           <motion.div
             animate={{ y: [0, 6, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-            className="flex flex-col items-center gap-1.5 pt-4 text-amber-900/60 select-none cursor-default"
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="flex flex-col items-center gap-1.5 pt-2 text-amber-900/60 select-none cursor-default"
           >
-            <span className="text-[10px] font-mono tracking-widest uppercase text-amber-950/80 font-bold">
-              {lang === "en" ? "Explore" : "استكشف القائمة"}
+            <span className="text-[9px] font-mono tracking-[0.25em] text-amber-950/80 font-extrabold uppercase">
+              {lang === "en" ? "Explore the Menu" : "استكشف قائمة الطعام الملكية"}
             </span>
             <ChevronDown className="w-4 h-4 text-amber-800" />
           </motion.div>
@@ -428,12 +521,14 @@ export default function MenuBook({
                             key={item.id}
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-amber-900/[0.04] rounded-2xl"
                           >
-                            <div className="w-20 h-20 rounded-full overflow-hidden shadow-md shrink-0">
+                            <div className="w-20 h-20 shrink-0 select-none flex items-center justify-center">
                               <img 
                                 src={config.itemImages?.[item.id] || item.image} 
                                 alt={item.nameEn} 
-                                className="w-full h-full object-cover"
+                                className="max-w-full max-h-full object-contain filter drop-shadow-[0_8px_16px_rgba(40,30,10,0.18)]"
                                 referrerPolicy="no-referrer"
+                                loading="lazy"
+                                decoding="async"
                               />
                             </div>
                             <div className={`flex-1 w-full ${lang === "ar" ? "text-right" : "text-left"}`}>
@@ -535,36 +630,22 @@ export default function MenuBook({
             ) : (
               /* INTERACTIVE WEB LIST: All categories and items stacked continuously with advanced layout transitions */
               <div className="flex flex-col gap-12 sm:gap-16">
-                {categories.map((cat) => {
-                  const query = searchQuery.trim().toLowerCase();
-                  const matchedItems = cat.items.filter((item) => {
-                    if (!query) return true;
-                    return (
-                      item.nameEn.toLowerCase().includes(query) ||
-                      item.nameAr.includes(query) ||
-                      item.descriptionEn.toLowerCase().includes(query) ||
-                      item.descriptionAr.includes(query) ||
-                      (item.tags && item.tags.some((tag) => tag.toLowerCase().includes(query)))
-                    );
-                  });
-
-                  if (matchedItems.length === 0) return null;
-
+                {filteredCategories.map((cat) => {
                   return (
                     <motion.div 
                       key={cat.id}
-                      initial={{ opacity: 0, y: 30 }}
+                      initial={{ opacity: 0, y: 15 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-80px" }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      viewport={{ once: true, margin: "-120px" }}
+                      transition={{ duration: 0.45, ease: "easeOut" }}
                       className="space-y-6"
                     >
                       {/* Section Title (No dividing lines, pure typography spacing) */}
                       <div className="text-center py-2 select-none">
                         <motion.h2 
-                          initial={{ scale: 0.95 }}
+                          initial={{ scale: 0.98 }}
                           whileInView={{ scale: 1 }}
-                          transition={{ duration: 0.5 }}
+                          transition={{ duration: 0.3 }}
                           className="text-2xl md:text-3xl font-extrabold tracking-widest text-amber-950 font-sans uppercase"
                         >
                           {lang === "en" ? cat.nameEn : cat.nameAr}
@@ -574,45 +655,45 @@ export default function MenuBook({
 
                       {/* Stacked items belonging to this category */}
                       <div className="flex flex-col gap-6 md:gap-8">
-                        {matchedItems.map((item, index) => {
+                        {cat.items.map((item, index) => {
                           const qty = wishlist[item.id] || 0;
                           const isReversed = index % 2 === 1;
                           
                           return (
                             <motion.div
                               key={item.id}
-                              initial={{ opacity: 0, y: 30, scale: 0.98 }}
-                              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                              viewport={{ once: true, margin: "-60px" }}
+                              initial={{ opacity: 0, y: 15 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true, margin: "-100px" }}
                               transition={{ 
-                                type: "spring", 
-                                stiffness: 60, 
-                                damping: 14,
-                                delay: Math.min(index * 0.05, 0.25)
+                                type: "tween", 
+                                duration: 0.35,
+                                ease: "easeOut",
+                                delay: Math.min(index * 0.04, 0.16)
                               }}
                               whileHover={{ 
-                                y: -5,
-                                scale: 1.01,
-                                backgroundColor: "rgba(120, 53, 4, 0.03)"
+                                y: -4,
+                                scale: 1.005,
+                                backgroundColor: "rgba(120, 53, 4, 0.025)"
                               }}
-                              whileTap={{ scale: 0.99 }}
+                              whileTap={{ scale: 0.995 }}
                               className={`flex flex-row items-center gap-3 sm:gap-6 md:gap-10 p-2 sm:p-4 rounded-2xl transition-all duration-300 relative ${
                                 isReversed ? "sm:flex-row-reverse" : ""
                               } ${
                                 qty > 0 ? "bg-amber-900/[0.04] ring-1 ring-amber-800/10" : ""
                               } hover:bg-amber-900/[0.02]`}
                             >
-                              {/* Isolated Dish Image (Sleek circle cut-out, always on the left on mobile) */}
-                              <div className="relative shrink-0 select-none group">
-                                <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden border border-amber-800/20 shadow-lg bg-amber-950/10 relative">
-                                  <img
-                                    src={config.itemImages?.[item.id] || item.image}
-                                    alt={lang === "en" ? item.nameEn : item.nameAr}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                </div>
-                                <span className="absolute -top-1 -right-1 bg-amber-950 text-amber-400 font-bold text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-amber-500/30 shadow-md">
+                              {/* Isolated Dish Image (Sleek floating layout without a circle outline, blending beautifully with the website) */}
+                              <div className="relative shrink-0 select-none group w-16 h-16 xs:w-20 xs:h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center">
+                                <img
+                                  src={config.itemImages?.[item.id] || item.image}
+                                  alt={lang === "en" ? item.nameEn : item.nameAr}
+                                  className="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(40,30,10,0.22)] group-hover:scale-110 group-hover:rotate-[6deg] transition-all duration-500 ease-out"
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                                <span className="absolute -top-1 -right-1 bg-amber-950/90 text-amber-400 font-bold text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-amber-500/30 shadow-md animate-pulse">
                                   ✦
                                 </span>
                               </div>

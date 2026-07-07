@@ -158,6 +158,8 @@ export default function AdminPanel({
   const [localConfig, setLocalConfig] = useState<BackgroundConfig>({
     coverUrl: config.coverUrl || "",
     logoUrl: config.logoUrl || "",
+    backgroundUrl: config.backgroundUrl || "",
+    brandName: config.brandName || "",
     categoryBackgrounds: config.categoryBackgrounds || {},
     itemImages: config.itemImages || {},
     cloudinary: config.cloudinary || { cloudName: "", uploadPreset: "" },
@@ -173,6 +175,8 @@ export default function AdminPanel({
     setLocalConfig({
       coverUrl: config.coverUrl || "",
       logoUrl: config.logoUrl || "",
+      backgroundUrl: config.backgroundUrl || "",
+      brandName: config.brandName || "",
       categoryBackgrounds: config.categoryBackgrounds || {},
       itemImages: config.itemImages || {},
       cloudinary: config.cloudinary || { cloudName: "", uploadPreset: "" },
@@ -201,6 +205,8 @@ export default function AdminPanel({
     if (window.confirm(lang === "en" ? "Reset back to default layout?" : "هل تريد إعادة التعيين للوضع الافتراضي؟")) {
       const resetConfig: BackgroundConfig = {
         coverUrl: "",
+        backgroundUrl: "",
+        brandName: "",
         categoryBackgrounds: {},
         itemImages: {},
         cloudinary: { cloudName: "", uploadPreset: "" }
@@ -217,6 +223,7 @@ export default function AdminPanel({
     });
     const mockConf: BackgroundConfig = {
       coverUrl: `https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=1200`,
+      brandName: "NFRT",
       categoryBackgrounds: mockUrls,
       itemImages: {},
       cloudinary: localConfig.cloudinary
@@ -228,7 +235,7 @@ export default function AdminPanel({
   // Direct Cloudinary Upload handler
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    targetType: "cover" | "logo" | "category" | "item",
+    targetType: "cover" | "logo" | "category" | "item" | "background",
     targetId?: string
   ) => {
     const file = e.target.files?.[0];
@@ -246,7 +253,7 @@ export default function AdminPanel({
       return;
     }
 
-    const uniqueId = targetType === "item" ? targetId! : targetType === "category" ? targetId! : targetType === "logo" ? "logo" : "cover";
+    const uniqueId = targetType === "item" ? targetId! : targetType === "category" ? targetId! : targetType === "logo" ? "logo" : targetType === "background" ? "background" : "cover";
     setUploadingId(uniqueId);
 
     try {
@@ -273,6 +280,8 @@ export default function AdminPanel({
           next.coverUrl = uploadedUrl;
         } else if (targetType === "logo") {
           next.logoUrl = uploadedUrl;
+        } else if (targetType === "background") {
+          next.backgroundUrl = uploadedUrl;
         } else if (targetType === "category" && targetId) {
           next.categoryBackgrounds = {
             ...prev.categoryBackgrounds,
@@ -293,6 +302,8 @@ export default function AdminPanel({
         parentUpdate.coverUrl = uploadedUrl;
       } else if (targetType === "logo") {
         parentUpdate.logoUrl = uploadedUrl;
+      } else if (targetType === "background") {
+        parentUpdate.backgroundUrl = uploadedUrl;
       } else if (targetType === "category" && targetId) {
         parentUpdate.categoryBackgrounds = {
           ...localConfig.categoryBackgrounds,
@@ -635,7 +646,7 @@ export default function AdminPanel({
                 : "قم بتعيين لوجو علاماتك التجارية وصورة الهيرو الكبرى لنفرتيتي. تظهر هذه الصورة في المنتصف كعنصر جمالي، بينما يظهر اللوجو في أعلى اليسار وفي الواجهة الرئيسية."}
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Cover uploader */}
               <div className="bg-black/20 p-5 rounded-xl border border-amber-900/20 space-y-4">
                 <div className="flex justify-between items-center">
@@ -759,6 +770,83 @@ export default function AdminPanel({
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleFileUpload(e, "logo")}
+                      className="hidden"
+                      disabled={uploadingId !== null}
+                    />
+                  </label>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="block text-[10px] uppercase font-mono tracking-wider text-amber-500/80">
+                    {lang === "en" ? "Brand Name / Restaurant Name" : "اسم المطعم / علامة المنيو التجارية"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. NFRT"
+                    value={localConfig.brandName || ""}
+                    onChange={(e) => setLocalConfig(prev => ({ ...prev, brandName: e.target.value }))}
+                    className="w-full bg-black/40 border border-amber-900/40 rounded-xl px-4 py-2.5 text-xs text-amber-100 placeholder-amber-900/30 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Website Background uploader */}
+              <div className="bg-black/20 p-5 rounded-xl border border-amber-900/20 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="block text-xs uppercase font-mono tracking-wider text-amber-400">
+                    {lang === "en" ? "Website Background Image" : "خلفية الموقع العامة (اختياري)"}
+                  </span>
+                  <span className="text-[10px] text-amber-500/60 font-mono">
+                    {lang === "en" ? "Papyrus if empty" : "الافتراضية هي البردي الفاخر"}
+                  </span>
+                </div>
+
+                {/* Live Background Preview */}
+                <div className="w-full h-32 rounded-lg overflow-hidden border border-amber-900/30 bg-black/40 relative flex items-center justify-center group">
+                  {localConfig.backgroundUrl ? (
+                    <>
+                      <img 
+                        src={localConfig.backgroundUrl} 
+                        alt="Background Preview" 
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
+                        <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/30">
+                          {lang === "en" ? "Active Background" : "خلفية نشطة مخصصة"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4">
+                      <ImageIcon className="w-8 h-8 text-amber-900/30 mx-auto mb-1" />
+                      <span className="text-[10px] font-mono text-amber-500/50 block">
+                        {lang === "en" ? "Using default textured papyrus" : "يتم استخدام ورق البردي الذهبي الافتراضي"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="url"
+                    placeholder={lang === "en" ? "Paste image URL or upload file →" : "ضع رابط الخلفية أو ارفع ملف من هنا ←"}
+                    value={localConfig.backgroundUrl || ""}
+                    onChange={(e) => setLocalConfig(prev => ({ ...prev, backgroundUrl: e.target.value }))}
+                    className="flex-1 bg-black/40 border border-amber-900/40 rounded-xl px-4 py-2.5 text-xs text-amber-100 placeholder-amber-900/30 focus:outline-none focus:border-amber-500 font-mono"
+                  />
+
+                  <label className="relative flex items-center justify-center gap-2 bg-amber-800 hover:bg-amber-700 active:scale-95 text-amber-50 px-4 py-2.5 rounded-xl cursor-pointer transition-all text-xs font-bold font-sans shrink-0">
+                    {uploadingId === "background" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    <span>{lang === "en" ? "Upload Background" : "رفع خلفية"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, "background")}
                       className="hidden"
                       disabled={uploadingId !== null}
                     />

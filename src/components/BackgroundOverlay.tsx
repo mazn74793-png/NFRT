@@ -7,7 +7,7 @@ interface BackgroundOverlayProps {
 
 export default function BackgroundOverlay({ customBgUrl, isCover = false }: BackgroundOverlayProps) {
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
+    <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0 transform-gpu">
       {/* Base Papyrus Color & Texture */}
       <div 
         className="absolute inset-0 bg-[#f4e6cc] transition-colors duration-700"

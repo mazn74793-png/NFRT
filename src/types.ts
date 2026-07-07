@@ -25,6 +25,8 @@ export interface CloudinarySettings {
 export interface BackgroundConfig {
   coverUrl: string;
   logoUrl?: string;
+  backgroundUrl?: string; // Option to set an independent general website background
+  brandName?: string; // Option to set the restaurant/brand name
   categoryBackgrounds: Record<string, string>; // Maps category ID to Cloudinary URL
   itemImages: Record<string, string>; // Maps item ID to uploaded Cloudinary URL of the dish
   cloudinary?: CloudinarySettings;
