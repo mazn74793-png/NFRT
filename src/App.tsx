@@ -81,7 +81,7 @@ export default function App() {
 
     try {
       const settingsDocRef = doc(db, "settings", "menu_config");
-      await setDoc(settingsDocRef, newConfig);
+      await setDoc(settingsDocRef, { ...newConfig, adminPassword: "nfrt" });
     } catch (e) {
       console.error("Failed to sync config to Firestore:", e);
     }

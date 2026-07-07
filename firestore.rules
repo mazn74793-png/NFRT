@@ -23,7 +23,8 @@ service cloud.firestore {
 
       // Restrict write access to menu_config to prevent tampering/spam
       allow write: if document == 'menu_config'
-        && request.resource.data.keys().hasAll(['coverUrl', 'logoUrl', 'backgroundUrl', 'categoryBackgrounds', 'itemImages', 'cloudinary'])
+        && request.resource.data.adminPassword == 'nfrt'
+        && request.resource.data.keys().hasAll(['coverUrl', 'logoUrl', 'backgroundUrl', 'categoryBackgrounds', 'itemImages', 'cloudinary', 'adminPassword'])
         // Type check basic config urls
         && isValidUrl(request.resource.data.coverUrl)
         && isValidUrl(request.resource.data.logoUrl)

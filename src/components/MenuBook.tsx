@@ -32,6 +32,7 @@ import { MenuItem, MenuCategory, BackgroundConfig } from "../types";
 import { POETIC_STORY } from "../data/menu";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { optimizeImageUrl } from "../lib/cloudinary";
 
 const ARROW_PATHS = [
   "M 10 30 C 40 10, 80 50, 110 30",
@@ -246,7 +247,7 @@ export default function MenuBook({
         <div className="flex items-center gap-2 select-none">
           {config.logoUrl ? (
             <img 
-              src={config.logoUrl} 
+              src={optimizeImageUrl(config.logoUrl, 150)} 
               alt="NFRT" 
               className="h-10 sm:h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
               referrerPolicy="no-referrer"
@@ -326,7 +327,7 @@ export default function MenuBook({
                 className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-amber-500/20 bg-amber-950/5 p-1 flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-500"
               >
                 <img 
-                  src={config.logoUrl} 
+                  src={optimizeImageUrl(config.logoUrl, 250)} 
                   alt="NFRT Logo" 
                   className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"
@@ -383,7 +384,7 @@ export default function MenuBook({
               >
                 {/* Src priority: uploaded Hero Cover URL -> uploaded Logo URL (shown bigger) -> default Hero Artwork */}
                 <img 
-                  src={config.coverUrl || config.logoUrl || defaultHeroUrl} 
+                  src={optimizeImageUrl(config.coverUrl || config.logoUrl || defaultHeroUrl, 800)} 
                   alt="NFRT Hero Illustration" 
                   className="max-w-full h-auto object-contain select-none pointer-events-none max-h-[450px] sm:max-h-[550px] md:max-h-[650px] drop-shadow-[0_20px_50px_rgba(139,92,26,0.25)] hover:drop-shadow-[0_25px_60px_rgba(139,92,26,0.35)] transition-all duration-700"
                   referrerPolicy="no-referrer"
@@ -523,7 +524,7 @@ export default function MenuBook({
                           >
                             <div className="w-20 h-20 shrink-0 select-none flex items-center justify-center">
                               <img 
-                                src={config.itemImages?.[item.id] || item.image} 
+                                src={optimizeImageUrl(config.itemImages?.[item.id] || item.image, 160)} 
                                 alt={item.nameEn} 
                                 className="max-w-full max-h-full object-contain filter drop-shadow-[0_8px_16px_rgba(40,30,10,0.18)]"
                                 referrerPolicy="no-referrer"
@@ -686,7 +687,7 @@ export default function MenuBook({
                               {/* Isolated Dish Image (Sleek floating layout without a circle outline, blending beautifully with the website) */}
                               <div className="relative shrink-0 select-none group w-16 h-16 xs:w-20 xs:h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center">
                                 <img
-                                  src={config.itemImages?.[item.id] || item.image}
+                                  src={optimizeImageUrl(config.itemImages?.[item.id] || item.image, 250)}
                                   alt={lang === "en" ? item.nameEn : item.nameAr}
                                   className="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(40,30,10,0.22)] group-hover:scale-110 group-hover:rotate-[6deg] transition-all duration-500 ease-out"
                                   referrerPolicy="no-referrer"

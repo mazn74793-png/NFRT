@@ -1,4 +1,5 @@
 import React from "react";
+import { optimizeImageUrl } from "../lib/cloudinary";
 
 interface BackgroundOverlayProps {
   customBgUrl?: string;
@@ -30,6 +31,16 @@ export default function BackgroundOverlay({ customBgUrl, isCover = false }: Back
           backgroundSize: "24px 24px"
         }}
       />
+
+      {/* Custom User Background Image from Cloudinary (Blends with luxury papyrus) */}
+      {customBgUrl && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out z-10 opacity-[0.14] mix-blend-multiply"
+          style={{ 
+            backgroundImage: `url("${optimizeImageUrl(customBgUrl, 1200)}")`,
+          }}
+        />
+      )}
 
       {/* Decorative Golden Egyptian Column Borders on Left/Right */}
       <div className="absolute top-0 bottom-0 left-0 w-8 md:w-16 border-r border-amber-900/10 bg-gradient-to-r from-amber-950/5 to-transparent flex flex-col items-center justify-around py-12 opacity-40">
@@ -77,16 +88,6 @@ export default function BackgroundOverlay({ customBgUrl, isCover = false }: Back
           <path d="M35,30 Q45,25 65,30" strokeWidth="4" />
         </svg>
       </div>
-
-      {/* Custom User Background Image from Cloudinary (Overlays with customizable opacity) */}
-      {customBgUrl && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 ease-in-out z-10"
-          style={{ 
-            backgroundImage: `url("${customBgUrl}")`,
-          }}
-        />
-      )}
 
       {/* Vintage vignette shading */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-amber-950/20 z-20 pointer-events-none" />

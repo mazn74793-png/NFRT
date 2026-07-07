@@ -29,6 +29,7 @@ import {
 import { BackgroundConfig, MenuCategory, CloudinarySettings, LiveOrder } from "../types";
 import { collection, onSnapshot, doc, updateDoc, query, orderBy, deleteDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { optimizeImageUrl } from "../lib/cloudinary";
 
 function playOrderSound() {
   try {
@@ -663,7 +664,7 @@ export default function AdminPanel({
                   {localConfig.coverUrl ? (
                     <>
                       <img 
-                        src={localConfig.coverUrl} 
+                        src={optimizeImageUrl(localConfig.coverUrl, 300)} 
                         alt="Hero Preview" 
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         referrerPolicy="no-referrer"
@@ -728,7 +729,7 @@ export default function AdminPanel({
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 rounded-full overflow-hidden border border-amber-500/30 bg-[#1e1710] p-1 flex items-center justify-center shadow-lg">
                         <img 
-                          src={localConfig.logoUrl} 
+                          src={optimizeImageUrl(localConfig.logoUrl, 150)} 
                           alt="Logo Preview" 
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
@@ -806,7 +807,7 @@ export default function AdminPanel({
                   {localConfig.backgroundUrl ? (
                     <>
                       <img 
-                        src={localConfig.backgroundUrl} 
+                        src={optimizeImageUrl(localConfig.backgroundUrl, 300)} 
                         alt="Background Preview" 
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         referrerPolicy="no-referrer"
@@ -948,7 +949,7 @@ export default function AdminPanel({
                         <div className="w-16 h-16 rounded-full overflow-hidden border border-amber-800/30 shadow-md bg-amber-950/25 relative flex items-center justify-center">
                           {currentImage ? (
                             <img 
-                              src={currentImage} 
+                              src={optimizeImageUrl(currentImage, 120)} 
                               alt={item.nameEn} 
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
