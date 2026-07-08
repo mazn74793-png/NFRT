@@ -165,7 +165,8 @@ export default function AdminPanel({
     itemImages: config.itemImages || {},
     cloudinary: config.cloudinary || { cloudName: "", uploadPreset: "" },
     storyEn: config.storyEn || "",
-    storyAr: config.storyAr || ""
+    storyAr: config.storyAr || "",
+    adminPassword: config.adminPassword || ""
   });
   const [isSaved, setIsSaved] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
@@ -182,7 +183,8 @@ export default function AdminPanel({
       itemImages: config.itemImages || {},
       cloudinary: config.cloudinary || { cloudName: "", uploadPreset: "" },
       storyEn: config.storyEn || "",
-      storyAr: config.storyAr || ""
+      storyAr: config.storyAr || "",
+      adminPassword: config.adminPassword || ""
     });
   }, [config]);
 
@@ -603,7 +605,7 @@ export default function AdminPanel({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
               <div className="space-y-1.5">
                 <label className="block text-xs uppercase font-mono tracking-wider text-amber-400">
                   {lang === "en" ? "Cloud Name" : "اسم حساب كلاودري (Cloud Name)"}
@@ -626,6 +628,19 @@ export default function AdminPanel({
                   placeholder="e.g. nfrt_presets"
                   value={localConfig.cloudinary?.uploadPreset || ""}
                   onChange={(e) => handleCloudinarySettingsChange("uploadPreset", e.target.value)}
+                  className="w-full bg-black/40 border border-amber-900/40 rounded-xl px-4 py-2.5 text-xs text-amber-100 placeholder-amber-900/30 focus:outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs uppercase font-mono tracking-wider text-amber-400">
+                  {lang === "en" ? "Control Panel Password" : "كلمة مرور لوحة التحكم"}
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. nfrt"
+                  value={localConfig.adminPassword || ""}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, adminPassword: e.target.value }))}
                   className="w-full bg-black/40 border border-amber-900/40 rounded-xl px-4 py-2.5 text-xs text-amber-100 placeholder-amber-900/30 focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>

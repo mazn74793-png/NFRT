@@ -81,7 +81,10 @@ export default function App() {
 
     try {
       const settingsDocRef = doc(db, "settings", "menu_config");
-      await setDoc(settingsDocRef, { ...newConfig, adminPassword: "nfrt" });
+      await setDoc(settingsDocRef, { 
+        ...newConfig, 
+        adminPassword: newConfig.adminPassword || config.adminPassword || "nfrt" 
+      });
     } catch (e) {
       console.error("Failed to sync config to Firestore:", e);
     }
@@ -99,7 +102,8 @@ export default function App() {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === "nfrt") {
+    const correctPassword = config.adminPassword || "nfrt";
+    if (passwordInput === correctPassword) {
       setIsAdminUnlocked(true);
       setShowPasswordModal(false);
       setPasswordError(false);

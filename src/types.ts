@@ -32,6 +32,7 @@ export interface BackgroundConfig {
   cloudinary?: CloudinarySettings;
   storyEn?: string;
   storyAr?: string;
+  adminPassword?: string;
 }
 
 export interface OrderItem {

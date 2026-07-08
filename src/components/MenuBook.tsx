@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { 
   motion, 
   AnimatePresence 
@@ -26,7 +26,8 @@ import {
   ShoppingBag,
   Check,
   ChevronDown,
-  BookOpen
+  BookOpen,
+  Share2
 } from "lucide-react";
 import { MenuItem, MenuCategory, BackgroundConfig } from "../types";
 import { POETIC_STORY } from "../data/menu";
@@ -98,6 +99,88 @@ export default function MenuBook({
   const [tableNumber, setTableNumber] = useState("");
   const [isOrdering, setIsOrdering] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Parse URL search parameters on mount to prefill table, language, search, or active cart
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      
+      // Pre-fill Table Number
+      const urlTable = params.get("table") || params.get("t");
+      if (urlTable) setTableNumber(urlTable);
+
+      // Pre-fill Customer Name
+      const urlName = params.get("name") || params.get("n");
+      if (urlName) setCustomerName(urlName);
+
+      // Pre-fill Search query
+      const urlSearch = params.get("search") || params.get("s");
+      if (urlSearch) setSearchQuery(urlSearch);
+
+      // Pre-fill Language preference
+      const urlLang = params.get("lang") || params.get("l");
+      if (urlLang === "en" || urlLang === "ar") {
+        onChangeLang(urlLang as "en" | "ar");
+      }
+
+      // Pre-fill open/show tray flag
+      const urlShowTray = params.get("show_tray") || params.get("tray");
+      if (urlShowTray === "true" || urlShowTray === "1") {
+        setShowWishlistOnly(true);
+      }
+
+      // Pre-fill wishlist items (format: itemId1:qty1,itemId2:qty2)
+      const urlWishlist = params.get("wishlist") || params.get("w");
+      if (urlWishlist) {
+        const parsed: Record<string, number> = {};
+        const pairs = urlWishlist.split(",");
+        pairs.forEach((pair) => {
+          const [itemId, qtyStr] = pair.split(":");
+          if (itemId) {
+            const qty = parseInt(qtyStr || "1", 10);
+            if (!isNaN(qty) && qty > 0) {
+              parsed[itemId] = qty;
+            }
+          }
+        });
+        if (Object.keys(parsed).length > 0) {
+          setWishlist(parsed);
+        }
+      }
+    } catch (err) {
+      console.error("Error reading URL search parameters", err);
+    }
+  }, []);
+
+  // Copy shareable custom URL with all active order details, prefilled table number & language
+  const handleShareLink = () => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (tableNumber) params.set("table", tableNumber.trim());
+      if (customerName) params.set("name", customerName.trim());
+      if (searchQuery) params.set("search", searchQuery.trim());
+      params.set("lang", lang);
+      
+      if (Object.keys(wishlist).length > 0) {
+        const wishlistStr = Object.entries(wishlist)
+          .map(([id, qty]) => `${id}:${qty}`)
+          .join(",");
+        params.set("wishlist", wishlistStr);
+        params.set("show_tray", "true");
+      }
+
+      const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 3000);
+      });
+    } catch (err) {
+      console.error("Failed to copy share link:", err);
+    }
+  };
 
   // Synchronous and robust secret tap tracking using useRef
   const tapTracker = useRef({ count: 0, lastTime: 0 });
@@ -261,29 +344,28 @@ export default function MenuBook({
 
         {/* Top Right Elegance: Globe Icon Language Swapper & Order Tray */}
         <div className="flex items-center gap-3">
-          {/* Globe Icon Language Button */}
+          {/* Globe Icon Language Button (Pure Icon without text) */}
           <button
             onClick={() => onChangeLang(lang === "en" ? "ar" : "en")}
-            className="relative overflow-hidden px-4 py-2 rounded-full bg-gradient-to-r from-amber-950/90 to-stone-900/90 border border-amber-500/30 text-amber-200 hover:text-white hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] active:scale-95 transition-all duration-300 cursor-pointer flex items-center gap-2 group select-none backdrop-blur-md"
-            title={lang === "en" ? "Switch to Arabic" : "التغيير للغة الإنجليزية"}
+            className="relative w-10 h-10 rounded-full bg-gradient-to-r from-amber-950/90 to-stone-900/90 border border-amber-500/30 text-amber-200 hover:text-white hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center group select-none backdrop-blur-md"
+            title={lang === "en" ? "Switch Language / تغيير اللغة" : "Switch Language / تغيير اللغة"}
           >
             {/* Elegant glowing background pulse */}
-            <span className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
-            <Globe className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-500 ease-out" />
-            
-            <span className="text-[11px] font-extrabold uppercase tracking-widest leading-none">
-              {lang === "en" ? "عربي" : "English"}
-            </span>
+            <Globe className="w-5 h-5 text-amber-400 group-hover:rotate-45 transition-transform duration-500 ease-out" />
             
             {/* Tiny elegant accent dot */}
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-amber-500 border border-amber-950 shadow-sm animate-pulse" />
           </button>
 
           {/* Tray Button */}
           {totalWishlistItems > 0 && (
             <button
-              onClick={() => setShowWishlistOnly(!showWishlistOnly)}
+              onClick={() => {
+                setShowWishlistOnly(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-sans font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md bg-amber-950/95 text-amber-300 hover:bg-amber-900"
             >
               <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
@@ -502,6 +584,23 @@ export default function MenuBook({
                           : "تم إرسال طلبك مباشرة للمطبخ وللوحة الطاقم. يرجى الانتظار في مكانك، جاري تحضير طلبك الرائع!"}
                       </p>
                     </div>
+
+                    {/* Share Order / Table Link Button */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={handleShareLink}
+                        className="w-full flex items-center justify-center gap-2 bg-amber-950/80 hover:bg-amber-950 border border-amber-500/25 text-amber-300 text-xs font-bold py-3 px-5 rounded-xl cursor-pointer transition-all active:scale-95 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                      >
+                        <Share2 className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>
+                          {copiedLink 
+                            ? (lang === "en" ? "Link Copied!" : "تم نسخ رابط الطلب!") 
+                            : (lang === "en" ? "Share Order & Table with Friends" : "مشاركة الطلب والطاولة مع الأصدقاء")}
+                        </span>
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => {
                         setOrderSuccess(false);
@@ -522,11 +621,11 @@ export default function MenuBook({
                             key={item.id}
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-amber-900/[0.04] rounded-2xl"
                           >
-                            <div className="w-20 h-20 shrink-0 select-none flex items-center justify-center">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 select-none rounded-full overflow-hidden border-2 border-amber-500/20 bg-amber-950/10 flex items-center justify-center shadow-md">
                               <img 
                                 src={optimizeImageUrl(config.itemImages?.[item.id] || item.image, 160)} 
                                 alt={item.nameEn} 
-                                className="max-w-full max-h-full object-contain filter drop-shadow-[0_8px_16px_rgba(40,30,10,0.18)]"
+                                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                                 referrerPolicy="no-referrer"
                                 loading="lazy"
                                 decoding="async"
@@ -594,23 +693,38 @@ export default function MenuBook({
                           </div>
                         </div>
 
-                        <button
-                          type="submit"
-                          disabled={isOrdering}
-                          className="w-full flex items-center justify-center gap-2 bg-amber-950 hover:bg-amber-900 text-amber-200 font-sans font-extrabold uppercase tracking-wider text-xs sm:text-sm py-3 px-6 rounded-xl cursor-pointer transition-colors active:scale-95 disabled:opacity-50"
-                        >
-                          {isOrdering ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-amber-200 border-t-transparent rounded-full animate-spin" />
-                              <span>{lang === "en" ? "Sending Order..." : "جاري إرسال الطلب..."}</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShoppingBag className="w-4 h-4 text-amber-300" />
-                              <span>{lang === "en" ? "Order Now" : "إتمام وإرسال الطلب"}</span>
-                            </>
-                          )}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                          <button
+                            type="button"
+                            onClick={handleShareLink}
+                            className="flex-1 flex items-center justify-center gap-2 bg-[#2d2116] hover:bg-[#3d2f21] border border-amber-500/20 text-amber-300 font-sans font-bold uppercase tracking-wider text-xs py-3.5 px-4 rounded-xl cursor-pointer transition-all active:scale-95"
+                          >
+                            <Share2 className="w-4 h-4 text-amber-400 shrink-0" />
+                            <span>
+                              {copiedLink 
+                                ? (lang === "en" ? "Copied!" : "تم نسخ الرابط!") 
+                                : (lang === "en" ? "Share Tray & Table" : "مشاركة الطلب والطاولة")}
+                            </span>
+                          </button>
+
+                          <button
+                            type="submit"
+                            disabled={isOrdering}
+                            className="flex-1 sm:flex-[1.5] flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-amber-950 font-sans font-extrabold uppercase tracking-wider text-xs py-3.5 px-6 rounded-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50 shadow-md shadow-amber-900/20"
+                          >
+                            {isOrdering ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-amber-950 border-t-transparent rounded-full animate-spin" />
+                                <span>{lang === "en" ? "Sending Order..." : "جاري إرسال الطلب..."}</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShoppingBag className="w-4 h-4 text-amber-950 shrink-0" />
+                                <span>{lang === "en" ? "Send to Kitchen" : "إرسال الطلب للمطبخ"}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </form>
                     </div>
                   </>
@@ -684,17 +798,19 @@ export default function MenuBook({
                                 qty > 0 ? "bg-amber-900/[0.04] ring-1 ring-amber-800/10" : ""
                               } hover:bg-amber-900/[0.02]`}
                             >
-                              {/* Isolated Dish Image (Sleek floating layout without a circle outline, blending beautifully with the website) */}
-                              <div className="relative shrink-0 select-none group w-16 h-16 xs:w-20 xs:h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center">
-                                <img
-                                  src={optimizeImageUrl(config.itemImages?.[item.id] || item.image, 250)}
-                                  alt={lang === "en" ? item.nameEn : item.nameAr}
-                                  className="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(40,30,10,0.22)] group-hover:scale-110 group-hover:rotate-[6deg] transition-all duration-500 ease-out"
-                                  referrerPolicy="no-referrer"
-                                  loading="lazy"
-                                  decoding="async"
-                                />
-                                <span className="absolute -top-1 -right-1 bg-amber-950/90 text-amber-400 font-bold text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-amber-500/30 shadow-md animate-pulse">
+                              {/* Luxury Circular Dish Image Frame */}
+                              <div className="relative shrink-0 select-none group">
+                                <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-amber-500/30 shadow-[0_8px_24px_rgba(139,92,26,0.18)] bg-amber-950/10 flex items-center justify-center">
+                                  <img
+                                    src={optimizeImageUrl(config.itemImages?.[item.id] || item.image, 250)}
+                                    alt={lang === "en" ? item.nameEn : item.nameAr}
+                                    className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-[6deg] transition-all duration-500 ease-out"
+                                    referrerPolicy="no-referrer"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                </div>
+                                <span className="absolute -top-1 -right-1 bg-amber-950/90 text-amber-400 font-bold text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-amber-500/30 shadow-md animate-pulse z-10">
                                   ✦
                                 </span>
                               </div>
@@ -799,23 +915,48 @@ export default function MenuBook({
       {/* Floating Bottom Order Tray Indicator */}
       <AnimatePresence>
         {totalWishlistItems > 0 && !showWishlistOnly && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 50 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowWishlistOnly(true)}
-            className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-full text-xs sm:text-sm font-sans font-extrabold shadow-2xl bg-amber-950 text-amber-300 hover:bg-amber-900 hover:text-amber-100 border border-amber-500/20 cursor-pointer active:scale-95 transition-colors"
+          <motion.div
+            initial={{ opacity: 0, y: 80, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 80, x: "-50%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 220 }}
+            className="fixed bottom-4 left-1/2 z-50 w-[92%] sm:w-[460px] bg-[#1e150d]/95 backdrop-blur-lg rounded-2xl border border-amber-500/30 p-3.5 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.6),_0_0_15px_rgba(139,92,26,0.25)] select-none"
           >
-            <div className="relative">
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
-              <span className="absolute -top-2 -right-2 bg-rose-600 text-white font-mono text-[9px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
-                {totalWishlistItems}
-              </span>
+            {/* Item Details and Price */}
+            <div className="flex items-center gap-3">
+              <div className="relative p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                <ShoppingBag className="w-5 h-5" />
+                <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-mono text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-bounce">
+                  {totalWishlistItems}
+                </span>
+              </div>
+              <div className={`flex flex-col ${lang === "ar" ? "text-right" : "text-left"}`}>
+                <span className="text-[10px] text-amber-500/70 font-bold uppercase tracking-widest">
+                  {lang === "en" 
+                    ? (totalWishlistItems === 1 ? "1 DELICACY" : `${totalWishlistItems} DELICACIES`)
+                    : (totalWishlistItems === 1 ? "صنف واحد" : `${totalWishlistItems} أصناف مختارة`)
+                  }
+                </span>
+                <span className="text-sm font-extrabold text-amber-100 font-mono">
+                  {totalPrice} EGP
+                </span>
+              </div>
             </div>
-            <span>{lang === "en" ? "View My Tray" : "عرض الطلبات"}</span>
-          </motion.button>
+
+            {/* Glowing Order Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setShowWishlistOnly(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-amber-950 font-bold text-xs sm:text-sm tracking-wider shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>{lang === "en" ? "Order Now" : "اطلب الآن"}</span>
+              <span className="text-[11px] animate-pulse">✦</span>
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
 
